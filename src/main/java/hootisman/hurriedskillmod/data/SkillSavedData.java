@@ -35,7 +35,6 @@ public class SkillSavedData extends SavedData {
 
     public static final String XP_TAGKEY = "xp";
 
-    
 
     public static Map<UUID, Map<SkillType, Integer>> PLAYER_XP;
 
@@ -48,11 +47,8 @@ public class SkillSavedData extends SavedData {
     );
 
 
-    // public static final Codec<Map<SkillType, Integer>> DELETE_THIS = Codec.unboundedMap(SKILLTYPE_CODEC, Codec.INT);
-
     public void addXP(UUID uuid, SkillType type, int xpDrop) {
         PLAYER_XP.get(uuid).compute(type, (key, value) -> value + xpDrop);
-        // PLAYER_XP.get(uuid).put(type, xpDrop);
         setDirty();
     }
 
@@ -80,9 +76,6 @@ public class SkillSavedData extends SavedData {
         var xpMap = SKILLS_CODEC.parse(NbtOps.INSTANCE, tag.getCompound(XP_TAGKEY));
         PLAYER_XP = new HashMap<>(xpMap.result().orElse(new HashMap<>()));
 
-        // var xpMap = SKILLTYPE_CODEC.parse(NbtOps.INSTANCE, tag.getCompound(XP_TAGKEY));
-        // LOGGER.info(xpMap.result().toString());
-        // PLAYER_XP = new HashMap<>();
         return data;
     }
 
@@ -97,13 +90,8 @@ public class SkillSavedData extends SavedData {
         DataResult<Tag> xpTag = SKILLS_CODEC.encodeStart(NbtOps.INSTANCE, PLAYER_XP);
         LOGGER.info(xpTag.toString());
 
-        //todo initialize file with empty skills if doesnt exist, otherwise keep data thats there.
+        //TODO initialize file with empty skills if doesnt exist, otherwise keep data thats there.
         tag.put(XP_TAGKEY, xpTag.result().orElse(new CompoundTag()));
-
-        //todo delete
-        // DataResult<Tag> tempy = SKILLTYPE_CODEC.encodeStart(NbtOps.INSTANCE, SkillType.MAGIC);
-        // LOGGER.info(tempy.toString());
-        // tag.put(XP_TAGKEY, tempy.result().orElse(new CompoundTag()));
 
         LOGGER.info(tag.toString());
         return tag;

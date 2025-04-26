@@ -1,59 +1,51 @@
 package hootisman.hurriedskillmod.skills;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import hootisman.hurriedskillmod.HurriedSkillMod;
 import hootisman.hurriedskillmod.data.SkillSavedData;
 import hootisman.hurriedskillmod.data.SkillSavedData.SkillType;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.player.Player;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.Tags.Items;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
-@EventBusSubscriber(modid = HurriedSkillMod.MODID)
 public class SkillXPHandler{
-    private static final Logger LOGGER = LogUtils.getLogger();
     public static SkillSavedData skillData;
+    private static Logger LOGGER = LogUtils.getLogger();
+    
+    public static final int XP_PER_HIT = 10;
 
-    @SubscribeEvent
-    static void onServerStarted(ServerStartedEvent event){
-        LOGGER.info("Loading save data");
-        MinecraftServer server = event.getServer();
-        skillData = server.overworld().getDataStorage().computeIfAbsent(SkillSavedData.getFactory(), "poo_mmo_skills");
+    static void initNewPlayerSkills(UUID uuid){
+        skillData.addNewPlayer(uuid);
     }
 
-    @SubscribeEvent
-    static void onPlayerLogin(PlayerLoggedInEvent event){
-        Player player = event.getEntity();
-        // LOGGER.info(player.level().isClientSide() ? "Is client side!!!!" : "Is server side!!!");
+    static void giveCombatXP(ServerPlayer player, SkillType type, float damage){
+        int xpDrop = (int) Math.floor(damage * XP_PER_HIT);
+        LOGGER.info("COMBAT XP*** dmg: " + damage + " xpdrop: " + xpDrop);
 
-        if(!player.level().isClientSide()){
-            LOGGER.info("ONPLAYERLOGIN");
-
-            //assume addNewPlayer checks if player skill info is already in saveddata
-            skillData.addNewPlayer(player.getUUID());
-            LOGGER.info(skillData.PLAYER_XP.get(player.getUUID()).toString());
-        }
+        skillData.addXP(player.getUUID(), type, xpDrop);
     }
+    
+    static SkillType getWeaponSkillType(ItemStack stack){
+        //TODO this looks horrible
+        SkillType type = null;
 
-    @SubscribeEvent
-    static void onAttackEntity(AttackEntityEvent event) {
-        Player player = event.getEntity();
-        Entity entity = event.getTarget();
-
-        if (player.level() instanceof ServerLevel && entity instanceof Mob) {
-            LOGGER.info(event.getEntity().toString() + " ATTACKED MOB " + event.getTarget().toString());
-            //todo only add  xp when mob is DAMAGED (right now adds xp if hitting mob, spamming gives more xp)
-            skillData.addXP(player.getUUID(), SkillType.UNARMED, 10);
+        if(stack.isEmpty()){
+            type = SkillType.UNARMED;
+        }else if(stack.is(Items.TOOLS)){
+            type = SkillType.ONEHANDED;
         }
+        
+        //debugging
+        // var itemTags = stack.getTags();
+        // itemTags.forEach((item) -> LOGGER.info(item.toString()));
+
+
+        return type;
     }
 }
