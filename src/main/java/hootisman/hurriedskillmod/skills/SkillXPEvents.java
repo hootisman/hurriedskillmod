@@ -23,6 +23,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEven
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+// Handles events relating to XP gain
 @EventBusSubscriber(modid = HurriedSkillMod.MODID)
 public class SkillXPEvents{
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -31,7 +32,7 @@ public class SkillXPEvents{
     static void onServerStarted(ServerStartedEvent event){
         LOGGER.info("Loading save data");
         MinecraftServer server = event.getServer();
-        SkillXPHandler.skillData = server.overworld().getDataStorage().computeIfAbsent(SkillSavedData.getFactory(), "poo_mmo_skills");
+        SkillManager.skillData = server.overworld().getDataStorage().computeIfAbsent(SkillSavedData.getFactory(), "poo_mmo_skills");
     }
 
     @SubscribeEvent
@@ -42,22 +43,31 @@ public class SkillXPEvents{
             //TODO cleanup
             LOGGER.info("Player joined");
             //assume addNewPlayer checks if player skill info is already in saveddata
-            SkillXPHandler.initNewPlayerSkills(player.getUUID());
+            SkillManager.initNewPlayerSkills(player.getUUID());
             LOGGER.info(SkillSavedData.PLAYER_XP.get(player.getUUID()).toString());
         }
     }
 
     @SubscribeEvent
     static void onIncomingDamagePost(LivingDamageEvent.Post event){
+        handlePlayerHitMobXP(event);
+        handleMobHitPlayerXP(event);
+    }
+
+    static void handlePlayerHitMobXP(LivingDamageEvent.Post event){
         DamageSource source = event.getSource();
         ItemStack item;
         SkillType typeUsed;
 
         if(!(source.getEntity() instanceof ServerPlayer player) || 
         (item = source.getWeaponItem()) == null ||
-        (typeUsed = SkillXPHandler.getWeaponSkillType(item)) == null) return;
+        (typeUsed = SkillManager.getWeaponSkillType(item)) == null) return;
 
-        SkillXPHandler.giveCombatXP(player, typeUsed, event.getNewDamage());
+        SkillManager.giveCombatXP(player, typeUsed, event.getNewDamage());
+    }
+
+    static void handleMobHitPlayerXP(LivingDamageEvent.Post event){
+
     }
 
 }

@@ -21,6 +21,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 public class SkillSavedData extends SavedData {
     public enum SkillType {
         ONEHANDED,
+        WOODCUTTING,
         TWOHANDED,
         UNARMED,
         ARCHERY,
@@ -50,6 +51,10 @@ public class SkillSavedData extends SavedData {
     public void addXP(UUID uuid, SkillType type, int xpDrop) {
         PLAYER_XP.get(uuid).compute(type, (key, value) -> value + xpDrop);
         setDirty();
+    }
+
+    public int getXP(UUID uuid, SkillType type){
+        return PLAYER_XP.get(uuid).getOrDefault(type, -1);
     }
 
     // only call when new player joins/stats reset
