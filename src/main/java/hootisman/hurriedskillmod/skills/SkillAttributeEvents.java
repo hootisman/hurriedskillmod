@@ -25,6 +25,7 @@ public class SkillAttributeEvents {
         LivingEntity victim = event.getEntity();
         if(!(source.getEntity() instanceof ServerPlayer player)) return;
 
+        //TODO damage scales before listed "level" is right, debug
         AttributeInstance attribute = player.getAttributes().getInstance(Attributes.ATTACK_DAMAGE);
         boolean isHandEmpty = player.getItemInHand(InteractionHand.MAIN_HAND).isEmpty();
 
